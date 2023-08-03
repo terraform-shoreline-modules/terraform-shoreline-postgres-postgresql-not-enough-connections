@@ -1,0 +1,218 @@
+{
+  "name": "postgresql_not_enough_connections_incident",
+  "description": "The Postgresql not enough connections incident type refers to an issue where the Postgresql database instance has reached its maximum allowed connections limit, causing new connection requests to fail. This can result in application errors and downtime until the issue is resolved. The incident typically requires immediate attention from a database administrator or software engineer to increase the maximum number of allowed connections or optimize existing connections.",
+  "params": [
+    {
+      "name": "DATABASE_USER",
+      "value": ""
+    },
+    {
+      "name": "DATABASE_PASSWORD",
+      "value": ""
+    },
+    {
+      "name": "DATABASE_NAME",
+      "value": ""
+    },
+    {
+      "name": "DATABASE_HOST",
+      "value": ""
+    },
+    {
+      "name": "MAX_CONNECTIONS",
+      "value": ""
+    },
+    {
+      "name": "DATABASE_PORT",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Postgresql not enough connections incident\nThe Postgresql not enough connections incident type refers to an issue where the Postgresql database instance has reached its maximum allowed connections limit, causing new connection requests to fail. This can result in application errors and downtime until the issue is resolved. The incident typically requires immediate attention from a database administrator or software engineer to increase the maximum number of allowed connections or optimize existing connections."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the current number of connections to the Postgresql instance"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo su - postgres -c \"psql -c 'SELECT COUNT(*) FROM pg_stat_activity;'\"`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the maximum allowed number of connections in the Postgresql configuration"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo cat /etc/postgresql/main/postgresql.conf | grep max_connections`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the current memory usage of the Postgresql instance"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ps aux | grep postgres`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the current disk usage of the Postgresql instance"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `df -h /var/lib/postgresql`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the system logs for any errors related to Postgresql"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo tail -n 100 /var/log/syslog | grep postgres`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Postgresql logs for any errors or connection-related messages"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo tail -n 100 /var/log/postgresql/postgresql-main.log | grep -i error`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the network connections to the Postgresql instance"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo netstat -nlp | grep ${DATABASE_PORT}`"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the resource usage of the Postgresql process"
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo ps -eo pid,pcpu,pmem,vsz,rss,args | grep postgres | grep -v grep`"
+    },
+    {
+      "name": "cell_18",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## A long-running query or transaction has locked the database connection, preventing new connections from being established."
+    },
+    {
+      "name": "cell_19",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_db_connection_checker($DATABASE_USER, $DATABASE_PASSWORD, $DATABASE_NAME, $DATABASE_HOST, $MAX_CONNECTIONS, $DATABASE_PORT)"
+    },
+    {
+      "name": "cell_20",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Replace <MAX_CONNECTIONS> with the desired maximum number of allowed connections"
+    },
+    {
+      "name": "cell_21",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `MAX_CONNECTIONS=${MAX_CONNECTIONS}`"
+    },
+    {
+      "name": "cell_22",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Modify the postgresql.conf file to set the max_connections parameter"
+    },
+    {
+      "name": "cell_23",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo sed -i \"s/^#*max_connections *= *[0-9]\\+$/max_connections = $MAX_CONNECTIONS/\" /etc/postgresql/main/postgresql.conf`"
+    },
+    {
+      "name": "cell_24",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Restart the Postgresql service to apply the configuration changes"
+    },
+    {
+      "name": "cell_25",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo service postgresql restart`"
+    },
+    {
+      "name": "cell_26",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Use psql to verify the new maximum number of allowed connections"
+    },
+    {
+      "name": "cell_27",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `psql -U $DATABASE_USER -d $DATABASE_NAME -c \"SHOW max_connections;\"`"
+    },
+    {
+      "name": "cell_28",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Identify and terminate idle or inactive connections to free up resources for new connection requests. This can be done using the pg_stat_activity view or a third-party monitoring tool."
+    },
+    {
+      "name": "cell_29",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_terminate_idle_connections($DATABASE_USER, $DATABASE_NAME, $DATABASE_PORT)"
+    }
+  ]
+}
